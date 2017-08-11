@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name EH)(type Legacy)(uri "$(KIPRJMOD)/EH.mod")(options "")(descr ""))
+  (lib (name mylib_old)(type Legacy)(uri "$(KIPRJMOD)/mylib_old.mod")(options "")(descr ""))
+  (lib (name mylib)(type KiCad)(uri "$(KIPRJMOD)/mylib.pretty")(options "")(descr ""))
+)
