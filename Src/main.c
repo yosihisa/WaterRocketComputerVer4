@@ -53,7 +53,7 @@
 /* USER CODE BEGIN Includes */
 #include "I2C.h"
 #define UART_DEBUG	0	//取得したデータををUARTで送信するかどうか 0:送信しない 1:送信する　（初期化中は常に送信） 0の時はSDカードに記録はしない
-#define WIRELESS 0		//無線で制御するかどうか	0:制御しない 1:制御する
+#define WIRELESS 1		//無線で制御するかどうか	0:制御しない 1:制御する
 #define WRC_VERSION 1.0 //バージョン
 #define P0 1013.25		//海面気圧
 
@@ -388,22 +388,25 @@ int main(void)
 		my = data[0] | (data[1]  << 8);
 		mx = data[2] | (data[3]  << 8);
 		mz = data[4] | (data[5]  << 8);
+		mx *= -1;
+		my *= -1;
+		mz *= -1;
 	  
-		ax_d = (double)ax *GRAVITY * 0.488 / 1000;
-		ay_d = (double)ay *GRAVITY * 0.488 / 1000;
-		az_d = (double)az *GRAVITY * 0.488 / 1000 * (-1.0);
-		gx_d = (double)gx * 0.01526;
-		gy_d = (double)gy * 0.01526;
-		gz_d = (double)gz * 0.01526 * (-1.0);
+		ax_d = (double)ax *GRAVITY * 0.488 / 1000* (-1.0);
+		ay_d = (double)ay *GRAVITY * 0.488 / 1000* (-1.0);
+		az_d = (double)az *GRAVITY * 0.488 / 1000;
+		gx_d = (double)gx * 0.01526* (-1.0);
+		gy_d = (double)gy * 0.01526* (-1.0);
+		gz_d = (double)gz * 0.01526;
 	  
 		//加速度センサ
 		HAL_I2C_Mem_Read(&hi2c1, ADXL375_READ, ADXL375_DATAX0, 1, &data, 6, 100);
 		Ax = data[0] | (data[1]  << 8);
 		Ay = data[2] | (data[3]  << 8);
 		Az = data[4] | (data[5]  << 8);
-		Ax_d = (double)Ax *GRAVITY * 49 / 1000;
-		Ay_d = (double)Ay *GRAVITY * 49 / 1000;
-		Az_d = (double)Az *GRAVITY * 49 / 1000* (-1.0);
+		Ax_d = (double)Ax *GRAVITY * 49 / 1000* (-1.0);
+		Ay_d = (double)Ay *GRAVITY * 49 / 1000* (-1.0);
+		Az_d = (double)Az *GRAVITY * 49 / 1000;
 	  
 		//サーボ
 		servo = 0;
@@ -416,7 +419,7 @@ int main(void)
 			  //UART送信
 		sprintf(str, "%f, %f  ", press_d, temp_d);
 		HAL_UART_Transmit(&huart1, str, strlen(str), 0x00FF);
-		sprintf(str, " %+3.8f , %+3.8f , %+3.8f ,, %+3.8f , %+3.8f , %+3.8f ,%+4d,%+4d,%+4d  ,", ax_d, ay_d, az_d, gx_d, gy_d, gz_d, mx, mx, mz);
+		sprintf(str, " %+3.8f , %+3.8f , %+3.8f ,, %+3.8f , %+3.8f , %+3.8f ,%+4d,%+4d,%+4d  ,", ax_d, ay_d, az_d, gx_d, gy_d, gz_d, mx, my, mz);
 		HAL_UART_Transmit(&huart1, str, strlen(str), 0x00FF);
 		sprintf(str, " %+3.8f , %+3.8f , %+3.8f,", Ax_d, Ay_d, Az_d);
 		HAL_UART_Transmit(&huart1, str, strlen(str), 0x00FF);
@@ -513,7 +516,9 @@ int main(void)
 	}
 	/* USER CODE END 3 */
 	HAL_ADC_Stop_DMA(&hadc1);
+#if ( UART_DEBUG ==0 )
 	f_sync(&fil);
+#endif
 	sprintf(str,"\033[13;0H\033[49m\033[39m\033[2KRecording stop\nPlease turn off the power."); 
 	HAL_UART_Transmit(&huart6, str, strlen(str), 0x00FF); HAL_Delay(120);
 }
